@@ -1,0 +1,13 @@
+{
+  "github_repo": "fcucullu/kurwacoach",
+  "supabase_project_ref": "ytgyumihoeiwuyxbptjj",
+  "supabase_url": "https://ytgyumihoeiwuyxbptjj.supabase.co",
+  "vercel_project_name": "kurwacoach",
+  "subdomain": "kurwacoach",
+  "domain": "franciscocucullu.com",
+  "portfolio_title": "KurwaCoach",
+  "portfolio_description": "Learn Polish the hard way. Gamified phrase learning with audio pronunciation, streaks, and trophies.",
+  "portfolio_body": "KurwaCoach is a gamified PWA for learning essential Polish phrases. Categories include greetings, restaurant, shopping, transport, emergencies, numbers, daily life, and street slang. Each category presents phrases in English with four Polish translation options. Correct answers trigger confetti and the app speaks the pronunciation aloud using Web Speech API. Features streak tracking, 10 trophies, challenge mode with random phrases, and Google auth for saving progress.",
+  "portfolio_tags": ["Next.js", "Supabase", "PWA", "TypeScript"],
+  "portfolio_img": "/assets/app-kurwacoach.png"
+}
