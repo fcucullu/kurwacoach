@@ -7,6 +7,21 @@ import { Volume2 } from "lucide-react";
 import { ConfettiBurst } from "@/components/confetti";
 import { CATEGORIES } from "@/lib/phrases";
 import { DECLENSION_CATEGORIES } from "@/lib/declensions";
+import { VERB_CATEGORIES } from "@/lib/verbs";
+
+function generateVerbQuestions(categoryId: string): Question[] {
+  const cat = VERB_CATEGORIES.find((c) => c.id === categoryId);
+  if (!cat) return [];
+  return [...cat.exercises].sort(() => Math.random() - 0.5).slice(0, 10).map(ex => ({
+    en: ex.sentence,
+    correctPl: ex.answer,
+    pronunciation: "",
+    options: [...ex.options].sort(() => Math.random() - 0.5),
+    explanation: ex.explanation,
+    hint: ex.hint,
+    isDeclension: true, // reuse same display logic
+  }));
+}
 
 interface Question {
   en: string; // English phrase OR Polish sentence with blank
@@ -121,7 +136,8 @@ export default function QuizPage({ params }: { params: Promise<{ category: strin
 
   useEffect(() => {
     const declQ = generateDeclensionQuestions(category);
-    setQuestions(isChallenge ? generateChallengeQuestions() : (declQ.length > 0 ? declQ : generateQuestions(category)));
+    const verbQ = generateVerbQuestions(category);
+    setQuestions(isChallenge ? generateChallengeQuestions() : (declQ.length > 0 ? declQ : (verbQ.length > 0 ? verbQ : generateQuestions(category))));
   }, [category, isChallenge]);
 
   const handleAnswer = (option: string, e: React.MouseEvent) => {
@@ -256,7 +272,8 @@ export default function QuizPage({ params }: { params: Promise<{ category: strin
           <button
             onClick={() => {
               const dQ = generateDeclensionQuestions(category);
-              setQuestions(isChallenge ? generateChallengeQuestions() : (dQ.length > 0 ? dQ : generateQuestions(category)));
+              const vQ = generateVerbQuestions(category);
+              setQuestions(isChallenge ? generateChallengeQuestions() : (dQ.length > 0 ? dQ : (vQ.length > 0 ? vQ : generateQuestions(category))));
               setCurrent(0); setScore(0); setStreak(0); setBestStreak(0);
               setSelected(null); setIsCorrect(null); setShowExplanation(false); setFace(FACES.thinking); setFinished(false);
             }}
