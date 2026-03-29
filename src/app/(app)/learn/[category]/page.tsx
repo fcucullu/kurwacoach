@@ -20,7 +20,7 @@ function generateQuestions(categoryId: string): Question[] {
   const cat = CATEGORIES.find((c) => c.id === categoryId);
   if (!cat) return [];
 
-  const phrases = [...cat.phrases].sort(() => Math.random() - 0.5);
+  const phrases = [...cat.phrases].sort(() => Math.random() - 0.5).slice(0, 10);
   const allPhrases = cat.phrases;
 
   return phrases.map((phrase) => {
