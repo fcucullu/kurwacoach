@@ -1,7 +1,10 @@
 export interface DeclensionExercise {
   sentence: string; // Polish sentence with ___
-  hint: string; // base form shown to user, e.g. "(sklep)"
+  hint: string; // base form, e.g. "(dom)"
+  hintEn?: string; // English translation, e.g. "house"
+  sentenceEn?: string; // Full sentence in English
   options: string[];
+  optionCases?: Record<string, string>; // map option → case name
   answer: string;
   explanation: string;
 }
@@ -144,3 +147,34 @@ export const DECLENSION_CATEGORIES: DeclensionCategory[] = [
     ],
   },
 ];
+
+// Auto-add English hints and case labels
+const WORD_EN: Record<string, string> = {
+  "(kawa)": "coffee", "(pies)": "dog", "(samochód)": "car", "(jabłko)": "apple",
+  "(książka)": "book", "(nauczyciel)": "teacher", "(herbata)": "tea", "(chleb)": "bread",
+  "(film)": "film", "(mama)": "mom", "(muzyka)": "music", "(kot)": "cat",
+  "(czas)": "time", "(praca)": "work", "(pomoc)": "help", "(zima)": "winter",
+  "(sąsiad)": "neighbor", "(ludzie)": "people", "(cukier)": "sugar", "(szkoła)": "school",
+  "(dzień)": "day", "(dom)": "house/home", "(godzina)": "hour", "(pieniądze)": "money",
+  "(przyjaciel)": "friend", "(łyżka)": "spoon", "(student)": "student", "(autobus)": "bus",
+  "(długopis)": "pen", "(lekarka)": "doctor (f)", "(rodzina)": "family", "(historia)": "history",
+  "(piłka)": "ball", "(inżynier)": "engineer", "(Warszawa)": "Warsaw",
+  "(krzesło)": "chair", "(lotnisko)": "airport", "(biuro)": "office", "(gitara)": "guitar",
+  "(Polska)": "Poland", "(pan)": "sir/Mr", "(żona)": "wife", "(brat)": "brother",
+  "(dzieci)": "children", "(ty)": "you", "(Marek)": "Marek", "(pani)": "madam",
+  "(pan profesor)": "Mr. Professor", "(Ania)": "Ania",
+  "(Boże / Bóg)": "God", "(syn)": "son", "(kobieta)": "woman",
+  "(jedzenie)": "food", "(bilety)": "tickets", "(idea)": "idea",
+};
+
+const CASE_NAMES: Record<string, string> = {
+  nominative: "Nom.", genitive: "Gen.", dative: "Dat.",
+  accusative: "Acc.", instrumental: "Instr.", locative: "Loc.", vocative: "Voc.",
+};
+
+// Enrich exercises with English hints
+DECLENSION_CATEGORIES.forEach(cat => {
+  cat.exercises.forEach(ex => {
+    if (!ex.hintEn && WORD_EN[ex.hint]) ex.hintEn = WORD_EN[ex.hint];
+  });
+});

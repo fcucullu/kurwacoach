@@ -28,8 +28,11 @@ interface Question {
   correctPl: string;
   pronunciation: string;
   options: string[];
-  explanation?: string; // for declension exercises
-  hint?: string; // base form hint for declensions
+  explanation?: string;
+  hint?: string;
+  hintEn?: string; // English translation of the base word
+  sentenceEn?: string; // Full sentence in English
+  optionCases?: Record<string, string>; // option → case name
   isDeclension?: boolean;
 }
 
@@ -45,6 +48,9 @@ function generateDeclensionQuestions(categoryId: string): Question[] {
     options: [...ex.options].sort(() => Math.random() - 0.5),
     explanation: ex.explanation,
     hint: ex.hint,
+    hintEn: ex.hintEn,
+    sentenceEn: ex.sentenceEn,
+    optionCases: ex.optionCases,
     isDeclension: true,
   }));
 }
@@ -316,7 +322,7 @@ export default function QuizPage({ params }: { params: Promise<{ category: strin
           <>
             <p className="text-xs text-muted mb-1">Complete the sentence</p>
             <p className="text-2xl font-bold text-foreground">{q.en}</p>
-            {q.hint && <p className="text-sm text-red mt-2">{q.hint}</p>}
+            {q.hint && <p className="text-sm text-red mt-2">{q.hint}{q.hintEn ? ` — ${q.hintEn}` : ""}</p>}
           </>
         ) : (
           <>
@@ -335,15 +341,25 @@ export default function QuizPage({ params }: { params: Promise<{ category: strin
             else if (option === selected) bg = "bg-red-500/20 border-red-500";
           }
 
+          const caseLabel = (selected !== null && q.isDeclension && q.optionCases) ? q.optionCases[option] : null;
+
           return (
-            <button
-              key={option}
-              onClick={(e) => handleAnswer(option, e)}
-              disabled={selected !== null}
-              className={`${bg} border rounded-xl py-4 px-4 text-left transition-all active:scale-95 disabled:cursor-default`}
-            >
-              <p className="font-medium text-foreground">{option}</p>
-            </button>
+            <div key={option} className="flex gap-2">
+              <button
+                onClick={(e) => handleAnswer(option, e)}
+                disabled={selected !== null}
+                className={`${bg} border rounded-xl py-4 px-4 text-left transition-all active:scale-95 disabled:cursor-default flex-1`}
+              >
+                <span className="font-medium text-foreground">{option}</span>
+                {caseLabel && <span className="text-xs text-muted ml-2">({caseLabel})</span>}
+              </button>
+              {q.isDeclension && (
+                <button onClick={(e) => { e.stopPropagation(); speak(option); }}
+                  className="w-11 h-auto rounded-xl border border-border flex items-center justify-center shrink-0 hover:border-red/30">
+                  <Volume2 className="w-4 h-4 text-muted" />
+                </button>
+              )}
+            </div>
           );
         })}
       </div>
@@ -355,7 +371,8 @@ export default function QuizPage({ params }: { params: Promise<{ category: strin
             <p className="text-sm font-medium text-center mb-3">{isCorrect ? "✅ Correct!" : "❌ Incorrect"}</p>
             {q.isDeclension ? (
               <div>
-                <p className="text-base font-bold text-foreground mb-1">{q.correctPl}</p>
+                <p className="text-base font-bold text-foreground mb-1">{q.en.replace("___", q.correctPl)}</p>
+                {q.sentenceEn && <p className="text-xs text-muted mb-2">({q.sentenceEn})</p>}
                 <p className="text-xs text-muted leading-relaxed">{q.explanation}</p>
               </div>
             ) : (
