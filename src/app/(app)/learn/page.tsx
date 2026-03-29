@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Star } from "lucide-react";
 import { CATEGORIES } from "@/lib/phrases";
+import { DECLENSION_CATEGORIES } from "@/lib/declensions";
 
 interface Progress {
   category: string;
@@ -68,6 +69,36 @@ export default function LearnPage() {
                       key={s}
                       className={`w-4 h-4 ${s <= stars ? "text-red fill-red" : "text-border"}`}
                     />
+                  ))}
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Declension categories */}
+      <h2 className="text-sm font-semibold text-muted mt-6 mb-2">🔤 Grammar — Cases (Declensions)</h2>
+      <div className="space-y-3">
+        {DECLENSION_CATEGORIES.map((cat) => {
+          const p = progress[cat.id];
+          const stars = p?.stars || 0;
+          const played = p?.times_played || 0;
+
+          return (
+            <Link key={cat.id} href={`/learn/${cat.id}`}
+              className="block bg-surface rounded-xl p-4 border border-border hover:border-red/30 transition-all active:scale-[0.98]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">{cat.emoji}</span>
+                  <div>
+                    <h3 className="font-semibold text-foreground">{cat.name}</h3>
+                    <p className="text-xs text-muted">{cat.description}{played > 0 ? ` · played ${played}x` : ""}</p>
+                  </div>
+                </div>
+                <div className="flex gap-0.5 items-center">
+                  {[1, 2, 3].map((s) => (
+                    <Star key={s} className={`w-4 h-4 ${s <= stars ? "text-red fill-red" : "text-border"}`} />
                   ))}
                 </div>
               </div>

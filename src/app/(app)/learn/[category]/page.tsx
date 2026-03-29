@@ -6,15 +6,33 @@ import { useRouter } from "next/navigation";
 import { Volume2 } from "lucide-react";
 import { ConfettiBurst } from "@/components/confetti";
 import { CATEGORIES } from "@/lib/phrases";
+import { DECLENSION_CATEGORIES } from "@/lib/declensions";
 
 interface Question {
-  en: string;
+  en: string; // English phrase OR Polish sentence with blank
   correctPl: string;
   pronunciation: string;
   options: string[];
+  explanation?: string; // for declension exercises
+  hint?: string; // base form hint for declensions
+  isDeclension?: boolean;
 }
 
 interface ConfettiState { key: number; x: number; y: number }
+
+function generateDeclensionQuestions(categoryId: string): Question[] {
+  const cat = DECLENSION_CATEGORIES.find((c) => c.id === categoryId);
+  if (!cat) return [];
+  return [...cat.exercises].sort(() => Math.random() - 0.5).slice(0, 10).map(ex => ({
+    en: ex.sentence,
+    correctPl: ex.answer,
+    pronunciation: "",
+    options: [...ex.options].sort(() => Math.random() - 0.5),
+    explanation: ex.explanation,
+    hint: ex.hint,
+    isDeclension: true,
+  }));
+}
 
 function generateQuestions(categoryId: string): Question[] {
   const cat = CATEGORIES.find((c) => c.id === categoryId);
@@ -102,7 +120,8 @@ export default function QuizPage({ params }: { params: Promise<{ category: strin
   };
 
   useEffect(() => {
-    setQuestions(isChallenge ? generateChallengeQuestions() : generateQuestions(category));
+    const declQ = generateDeclensionQuestions(category);
+    setQuestions(isChallenge ? generateChallengeQuestions() : (declQ.length > 0 ? declQ : generateQuestions(category)));
   }, [category, isChallenge]);
 
   const handleAnswer = (option: string, e: React.MouseEvent) => {
@@ -236,7 +255,8 @@ export default function QuizPage({ params }: { params: Promise<{ category: strin
         <div className="space-y-3 max-w-xs mx-auto">
           <button
             onClick={() => {
-              setQuestions(isChallenge ? generateChallengeQuestions() : generateQuestions(category));
+              const dQ = generateDeclensionQuestions(category);
+              setQuestions(isChallenge ? generateChallengeQuestions() : (dQ.length > 0 ? dQ : generateQuestions(category)));
               setCurrent(0); setScore(0); setStreak(0); setBestStreak(0);
               setSelected(null); setIsCorrect(null); setShowExplanation(false); setFace(FACES.thinking); setFinished(false);
             }}
@@ -273,10 +293,20 @@ export default function QuizPage({ params }: { params: Promise<{ category: strin
         {face}
       </div>
 
-      {/* Question: English phrase */}
+      {/* Question */}
       <div className="text-center mb-6">
-        <p className="text-xs text-muted mb-1">How do you say...</p>
-        <p className="text-2xl font-bold text-foreground">"{q.en}"</p>
+        {q.isDeclension ? (
+          <>
+            <p className="text-xs text-muted mb-1">Complete the sentence</p>
+            <p className="text-2xl font-bold text-foreground">{q.en}</p>
+            {q.hint && <p className="text-sm text-red mt-2">{q.hint}</p>}
+          </>
+        ) : (
+          <>
+            <p className="text-xs text-muted mb-1">How do you say...</p>
+            <p className="text-2xl font-bold text-foreground">"{q.en}"</p>
+          </>
+        )}
       </div>
 
       {/* Options */}
@@ -306,16 +336,23 @@ export default function QuizPage({ params }: { params: Promise<{ category: strin
         <div className="w-full max-w-sm mt-4 animate-bounce-in">
           <div className={`p-4 rounded-xl border ${isCorrect ? "bg-green-500/10 border-green-500/30" : "bg-red-500/10 border-red-500/30"}`}>
             <p className="text-sm font-medium text-center mb-3">{isCorrect ? "✅ Correct!" : "❌ Incorrect"}</p>
-            <div className="flex items-center justify-between">
+            {q.isDeclension ? (
               <div>
-                <p className="text-base font-bold text-foreground">{q.correctPl}</p>
-                <p className="text-xs text-muted mt-1">{q.pronunciation}</p>
+                <p className="text-base font-bold text-foreground mb-1">{q.correctPl}</p>
+                <p className="text-xs text-muted leading-relaxed">{q.explanation}</p>
               </div>
-              <button onClick={() => speak(q.correctPl)}
-                className="w-12 h-12 rounded-full bg-red/20 flex items-center justify-center hover:bg-red/30 transition-colors shrink-0 ml-4">
-                <Volume2 className="w-6 h-6 text-red" />
-              </button>
-            </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-base font-bold text-foreground">{q.correctPl}</p>
+                  <p className="text-xs text-muted mt-1">{q.pronunciation}</p>
+                </div>
+                <button onClick={() => speak(q.correctPl)}
+                  className="w-12 h-12 rounded-full bg-red/20 flex items-center justify-center hover:bg-red/30 transition-colors shrink-0 ml-4">
+                  <Volume2 className="w-6 h-6 text-red" />
+                </button>
+              </div>
+            )}
           </div>
           <div className="flex gap-2 mt-3">
             <button onClick={flagExercise}
