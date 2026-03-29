@@ -88,6 +88,7 @@ export default function QuizPage({ params }: { params: Promise<{ category: strin
   const [confetti, setConfetti] = useState<ConfettiState | null>(null);
   const [bonusConfetti, setBonusConfetti] = useState<ConfettiState[]>([]);
   const [finished, setFinished] = useState(false);
+  const [showExplanation, setShowExplanation] = useState(false);
   const confettiKey = useRef(0);
 
   useEffect(() => {
@@ -130,20 +131,23 @@ export default function QuizPage({ params }: { params: Promise<{ category: strin
       setStreak(0);
     }
 
-    const newScore = correct ? score + 1 : score;
-    setTimeout(() => {
-      if (current + 1 >= questions.length) {
-        saveProgress(newScore);
-        setFinished(true);
-      } else {
-        setConfetti(null);
-        setBonusConfetti([]);
-        setCurrent((c) => c + 1);
-        setSelected(null);
-        setIsCorrect(null);
-        setFace(FACES.thinking);
-      }
-    }, correct ? 1500 : 3000);
+    setShowExplanation(true);
+  };
+
+  const handleNext = () => {
+    const newScore = score;
+    setConfetti(null);
+    setBonusConfetti([]);
+    if (current + 1 >= questions.length) {
+      saveProgress(newScore);
+      setFinished(true);
+    } else {
+      setCurrent((c) => c + 1);
+      setSelected(null);
+      setIsCorrect(null);
+      setShowExplanation(false);
+      setFace(FACES.thinking);
+    }
   };
 
   const saveProgress = async (finalScore: number) => {
@@ -223,7 +227,7 @@ export default function QuizPage({ params }: { params: Promise<{ category: strin
             onClick={() => {
               setQuestions(isChallenge ? generateChallengeQuestions() : generateQuestions(category));
               setCurrent(0); setScore(0); setStreak(0); setBestStreak(0);
-              setSelected(null); setIsCorrect(null); setFace(FACES.thinking); setFinished(false);
+              setSelected(null); setIsCorrect(null); setShowExplanation(false); setFace(FACES.thinking); setFinished(false);
             }}
             className="w-full bg-red text-white font-bold py-3 rounded-xl text-lg"
           >
@@ -286,18 +290,26 @@ export default function QuizPage({ params }: { params: Promise<{ category: strin
         })}
       </div>
 
-      {/* Pronunciation + audio on correct/wrong */}
-      {selected !== null && (
-        <div className="mt-4 text-center animate-bounce-in">
-          <button
-            onClick={() => speak(q.correctPl)}
-            className="inline-flex items-center gap-2 text-sm text-muted hover:text-foreground"
-          >
-            <Volume2 className="w-4 h-4" /> {q.pronunciation}
+      {/* Explanation + pronunciation + next button */}
+      {showExplanation && (
+        <div className="w-full max-w-sm mt-4 animate-bounce-in">
+          <div className={`p-4 rounded-xl border ${isCorrect ? "bg-green-500/10 border-green-500/30" : "bg-red-500/10 border-red-500/30"}`}>
+            <p className="text-sm font-medium mb-2">{isCorrect ? "✅ Correct!" : "❌ Incorrect"}</p>
+            {isCorrect === false && (
+              <p className="text-sm text-foreground mb-2">Answer: <strong>{q.correctPl}</strong></p>
+            )}
+            <div className="flex items-center gap-2 mb-1">
+              <button onClick={() => speak(q.correctPl)}
+                className="inline-flex items-center gap-2 text-sm text-red hover:text-foreground bg-red/10 px-3 py-1.5 rounded-lg">
+                <Volume2 className="w-4 h-4" /> Listen again
+              </button>
+            </div>
+            <p className="text-xs text-muted mt-1">Pronunciation: {q.pronunciation}</p>
+          </div>
+          <button onClick={handleNext}
+            className="w-full mt-3 bg-red text-white font-bold py-3 rounded-xl text-lg">
+            Next →
           </button>
-          {isCorrect === false && (
-            <p className="text-sm text-red-400 mt-1">Correct: {q.correctPl}</p>
-          )}
         </div>
       )}
 
