@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { LogOut, Bell, BellOff } from "lucide-react";
 import { CATEGORIES } from "@/lib/phrases";
 
 interface Progress { category: string; stars: number; best_streak: number; times_played: number; last_score: number; }
@@ -14,8 +14,42 @@ export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
   const [progress, setProgress] = useState<Progress[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pushStatus, setPushStatus] = useState<"unknown" | "granted" | "denied" | "unsupported">("unknown");
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); checkPush(); }, []);
+
+  const checkPush = async () => {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) { setPushStatus("unsupported"); return; }
+    if (Notification.permission === "denied") { setPushStatus("denied"); return; }
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      setPushStatus(sub ? "granted" : "unknown");
+    } catch { setPushStatus("unknown"); }
+  };
+
+  const enablePush = async () => {
+    try {
+      const result = await Notification.requestPermission();
+      if (result !== "granted") { setPushStatus("denied"); return; }
+      const reg = await navigator.serviceWorker.ready;
+      const vapidKey = "BFIFOfGFQvTSGzvAvV6Y2AD15u3hlI0aZm-iEfkxdFmijRTmeQE7tfwpdzP4MMIuHgHl9_0PK5iY6s92C_CBT1c";
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: vapidKey });
+      if (!user) return;
+      await fetch("/api/push", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: user.id, subscription: sub.toJSON() }) });
+      setPushStatus("granted");
+    } catch {}
+  };
+
+  const disablePush = async () => {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) { await sub.unsubscribe(); if (user) await supabase.from("kurwa_push_subs").delete().eq("user_id", user.id); }
+    } catch {}
+    setPushStatus("unknown");
+  };
 
   const loadData = async () => {
     const { data: { user: u } } = await supabase.auth.getUser();
@@ -113,6 +147,37 @@ export default function ProfilePage() {
           <p className="text-sm text-foreground">💡 <strong>Tip:</strong> Practice more <strong>{weakest[0].name}</strong> — your weakest category ({weakest[0].accuracy}%).</p>
         </div>
       )}
+
+      {/* Notifications */}
+      <div className="bg-surface rounded-xl border border-border p-4 mb-4">
+        <h2 className="text-sm font-semibold text-foreground mb-3">Notifications</h2>
+        {pushStatus === "granted" ? (
+          <button onClick={disablePush} className="flex items-center gap-3 w-full">
+            <Bell className="w-4 h-4 text-green-400" />
+            <div className="text-left flex-1">
+              <p className="text-sm text-green-400">Reminders active ✓</p>
+              <p className="text-xs text-muted">Daily at 22:00</p>
+            </div>
+            <span className="text-red-400 text-xs font-medium">Disable</span>
+          </button>
+        ) : pushStatus === "denied" ? (
+          <div className="flex items-center gap-3">
+            <BellOff className="w-4 h-4 text-muted" />
+            <p className="text-xs text-muted">Notifications blocked. Enable in browser settings.</p>
+          </div>
+        ) : pushStatus === "unsupported" ? (
+          <p className="text-xs text-muted">Push notifications not supported.</p>
+        ) : (
+          <button onClick={enablePush} className="flex items-center gap-3 w-full">
+            <Bell className="w-4 h-4 text-red" />
+            <div className="text-left flex-1">
+              <p className="text-sm text-foreground">Enable reminders</p>
+              <p className="text-xs text-muted">Daily practice reminder at 22:00</p>
+            </div>
+            <span className="text-red text-sm font-medium">Enable</span>
+          </button>
+        )}
+      </div>
 
       <button onClick={handleSignOut}
         className="w-full bg-surface rounded-xl border border-border p-4 flex items-center gap-3 text-red-400">

@@ -219,3 +219,10 @@ export const CATEGORIES: Category[] = [
     ],
   },
 ];
+
+// Merge extra phrases
+import { EXTRA_PHRASES } from "./extra-phrases";
+CATEGORIES.forEach(cat => {
+  const extras = EXTRA_PHRASES[cat.id];
+  if (extras) cat.phrases.push(...extras);
+});

@@ -89,7 +89,17 @@ export default function QuizPage({ params }: { params: Promise<{ category: strin
   const [bonusConfetti, setBonusConfetti] = useState<ConfettiState[]>([]);
   const [finished, setFinished] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
+  const [flagged, setFlagged] = useState(false);
   const confettiKey = useRef(0);
+
+  const flagExercise = () => {
+    const q = questions[current];
+    const flags = JSON.parse(localStorage.getItem("kurwa_flags") || "[]");
+    flags.push({ en: q.en, pl: q.correctPl, category, timestamp: new Date().toISOString() });
+    localStorage.setItem("kurwa_flags", JSON.stringify(flags));
+    setFlagged(true);
+    setTimeout(() => setFlagged(false), 2000);
+  };
 
   useEffect(() => {
     setQuestions(isChallenge ? generateChallengeQuestions() : generateQuestions(category));
@@ -146,6 +156,7 @@ export default function QuizPage({ params }: { params: Promise<{ category: strin
       setSelected(null);
       setIsCorrect(null);
       setShowExplanation(false);
+      setFlagged(false);
       setFace(FACES.thinking);
     }
   };
@@ -306,10 +317,16 @@ export default function QuizPage({ params }: { params: Promise<{ category: strin
               </button>
             </div>
           </div>
-          <button onClick={handleNext}
-            className="w-full mt-3 bg-red text-white font-bold py-3 rounded-xl text-lg">
-            Next →
-          </button>
+          <div className="flex gap-2 mt-3">
+            <button onClick={flagExercise}
+              className={`px-4 py-3 rounded-xl border transition-colors ${flagged ? "border-red-400 text-red-400" : "border-border text-muted hover:text-red-400 hover:border-red-400"}`}>
+              {flagged ? "✓" : "🚩"}
+            </button>
+            <button onClick={handleNext}
+              className="flex-1 bg-red text-white font-bold py-3 rounded-xl text-lg">
+              Next →
+            </button>
+          </div>
         </div>
       )}
 
