@@ -294,17 +294,17 @@ export default function QuizPage({ params }: { params: Promise<{ category: strin
       {showExplanation && (
         <div className="w-full max-w-sm mt-4 animate-bounce-in">
           <div className={`p-4 rounded-xl border ${isCorrect ? "bg-green-500/10 border-green-500/30" : "bg-red-500/10 border-red-500/30"}`}>
-            <p className="text-sm font-medium mb-2">{isCorrect ? "✅ Correct!" : "❌ Incorrect"}</p>
-            {isCorrect === false && (
-              <p className="text-sm text-foreground mb-2">Answer: <strong>{q.correctPl}</strong></p>
-            )}
-            <div className="flex items-center gap-2 mb-1">
+            <p className="text-sm font-medium text-center mb-3">{isCorrect ? "✅ Correct!" : "❌ Incorrect"}</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-base font-bold text-foreground">{q.correctPl}</p>
+                <p className="text-xs text-muted mt-1">{q.pronunciation}</p>
+              </div>
               <button onClick={() => speak(q.correctPl)}
-                className="inline-flex items-center gap-2 text-sm text-red hover:text-foreground bg-red/10 px-3 py-1.5 rounded-lg">
-                <Volume2 className="w-4 h-4" /> Listen again
+                className="w-12 h-12 rounded-full bg-red/20 flex items-center justify-center hover:bg-red/30 transition-colors shrink-0 ml-4">
+                <Volume2 className="w-6 h-6 text-red" />
               </button>
             </div>
-            <p className="text-xs text-muted mt-1">Pronunciation: {q.pronunciation}</p>
           </div>
           <button onClick={handleNext}
             className="w-full mt-3 bg-red text-white font-bold py-3 rounded-xl text-lg">
