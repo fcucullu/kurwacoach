@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Star } from "lucide-react";
 import { CATEGORIES } from "@/lib/phrases";
+import { InstallPrompt } from "@/components/install-prompt";
 import { DECLENSION_CATEGORIES } from "@/lib/declensions";
 import { VERB_CATEGORIES } from "@/lib/verbs";
 
@@ -38,7 +39,8 @@ export default function LearnPage() {
 
   return (
     <div>
-      <div className="text-center mb-8">
+      <InstallPrompt />
+      <div className="text-center mb-8 mt-4">
         <div className="text-5xl mb-2">🇵🇱</div>
         <h1 className="text-3xl font-bold red-shimmer mb-1">KurwaCoach</h1>
         <p className="text-sm text-muted">Pick a category to practice</p>
